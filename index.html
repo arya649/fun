@@ -464,9 +464,11 @@ const typeLabels = {
 };
 
 function getDayIndex() {
+  const anchor = new Date('2026-03-25T00:00:00');
+  const anchorDayIndex = 4; // day 5 = index 4
   const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  return Math.floor((now - start) / 86400000) % days.length;
+  const daysSinceAnchor = Math.floor((now - anchor) / 86400000);
+  return (anchorDayIndex + daysSinceAnchor) % days.length;
 }
 
 function formatDate(d) {
