@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>daily.wtf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,800;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c: #ff6b9d;
+  --bg1: #fff0f5;
+  --bg2: #ffe8f0;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 32px 20px;
+  overflow-x: hidden;
+  position: relative;
+  transition: background 0.7s ease;
+}
+
+/* ── animated bubbly background ── */
+.bg-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  transition: background 0.7s;
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.18;
+  animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.18; }
+  50%  { opacity: 0.28; }
+  100% { transform: translateY(-110vh) scale(1.2) rotate(360deg); opacity: 0; }
+}
+
+/* ── doodle decorations ── */
+.doodle {
+  position: fixed;
+  font-size: 28px;
+  opacity: 0.13;
+  animation: wiggle 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+.doodle:nth-child(2) { animation-delay: -1.2s; }
+.doodle:nth-child(3) { animation-delay: -2.5s; }
+.doodle:nth-child(4) { animation-delay: -0.7s; }
+.doodle:nth-child(5) { animation-delay: -3s; }
+
+@keyframes wiggle {
+  0%,100% { transform: rotate(-8deg) scale(1); }
+  50%      { transform: rotate(8deg) scale(1.1); }
+}
+
+/* ── container ── */
+.container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* ── header ── */
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: popIn 0.6s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+.logo {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  transition: color 0.5s;
+}
+
+.logo span {
+  display: inline-block;
+  animation: letterBounce 2s ease-in-out infinite;
+}
+.logo span:nth-child(2) { animation-delay: 0.1s; }
+.logo span:nth-child(3) { animation-delay: 0.2s; }
+.logo span:nth-child(4) { animation-delay: 0.3s; }
+.logo span:nth-child(5) { animation-delay: 0.4s; }
+.logo span:nth-child(6) { animation-delay: 0.5s; }
+.logo span:nth-child(7) { animation-delay: 0.6s; }
+.logo span:nth-child(8) { animation-delay: 0.7s; }
+.logo span:nth-child(9) { animation-delay: 0.8s; }
+
+@keyframes letterBounce {
+  0%,80%,100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+.date-line {
+  font-size: 13px;
+  margin-top: 6px;
+  opacity: 0.5;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── main card ── */
+.card {
+  border-radius: 28px;
+  padding: 40px 36px 32px;
+  position: relative;
+  opacity: 0;
+  animation: popIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.15s forwards;
+  transition: background 0.5s, box-shadow 0.5s;
+  overflow: hidden;
+}
+
+/* big sticker behind content */
+.card-sticker {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 130px;
+  opacity: 0.1;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  transform: rotate(12deg);
+  transition: all 0.5s;
+}
+
+/* wiggly top badge */
+.type-badge {
+  display: inline-block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+  letter-spacing: 0.03em;
+  transition: background 0.5s, color 0.5s;
+  animation: badgePop 0.4s cubic-bezier(.34,1.56,.64,1) 0.3s both;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0.5) rotate(-6deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.card-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  transition: color 0.5s;
+}
+
+.card-content {
+  font-size: 17px;
+  line-height: 1.75;
+  white-space: pre-line;
+  font-weight: 500;
+  transition: color 0.5s;
+}
+
+/* punchline highlight for jokes */
+.punchline {
+  display: inline-block;
+  font-size: 19px;
+  font-weight: 800;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* ── options ── */
+.options {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  cursor: default;
+  transition: transform 0.15s, background 0.2s;
+  font-size: 14px;
+  font-weight: 600;
+}
+.option-row:hover { transform: translateX(4px); }
+
+.option-key {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 28px;
+  text-align: center;
+  transition: color 0.5s;
+}
+
+.option-val { opacity: 0.8; }
+
+/* action hint */
+.action-hint {
+  margin-top: 18px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* ── footer strip ── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 20px;
+}
+
+.day-chip {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+  opacity: 0.65;
+  transition: background 0.5s, color 0.5s;
+}
+
+.notify-btn {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.5s, color 0.5s;
+  letter-spacing: 0.02em;
+}
+.notify-btn:hover  { transform: scale(1.06); }
+.notify-btn:active { transform: scale(0.96); }
+
+/* ── page footer ── */
+.page-footer {
+  text-align: center;
+  margin-top: 18px;
+  opacity: 0;
+  animation: popIn 0.5s ease 0.4s forwards;
+}
+.footer-text {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.35;
+}
+.progress-track {
+  width: 70px;
+  height: 5px;
+  border-radius: 99px;
+  margin: 8px auto 0;
+  overflow: hidden;
+  opacity: 0.3;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease, background 0.5s;
+}
+
+/* ── toast ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 26px;
+  border-radius: 999px;
+  z-index: 100;
+  transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.88) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes glitchShake {
+  0%,100% { transform: translate(0); }
+  20% { transform: translate(-3px, 1px); }
+  40% { transform: translate(3px, -1px); }
+  60% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+@media (max-width: 480px) {
+  .card { padding: 30px 24px 24px; }
+  .card-title { font-size: 28px; }
+  .card-sticker { font-size: 100px; }
+  .logo { font-size: 30px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-wrap" id="bg-wrap"></div>
+
+<!-- doodle decorations -->
+<div class="doodle" style="top:8%;left:4%">✿</div>
+<div class="doodle" style="top:15%;right:6%">★</div>
+<div class="doodle" style="bottom:20%;left:7%">♡</div>
+<div class="doodle" style="bottom:12%;right:5%">◎</div>
+<div class="doodle" style="top:50%;left:2%">⊹</div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo" id="logo">
+      <span>d</span><span>a</span><span>i</span><span>l</span><span>y</span><span>.</span><span>w</span><span>t</span><span>f</span>
+    </div>
+    <div class="date-line" id="date-line"></div>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="card-sticker" id="card-sticker"></div>
+    <div class="type-badge" id="type-badge"></div>
+    <div class="card-title" id="card-title"></div>
+    <div class="card-content" id="card-content"></div>
+    <div id="options-container"></div>
+    <div id="action-container"></div>
+    <div class="card-footer">
+      <div class="day-chip" id="day-chip"></div>
+      <button class="notify-btn" id="notify-btn" onclick="toggleNotifications()">🔔 remind me</button>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <div class="footer-text">a new one every day ✨</div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const days = [
+  // ── first 3 days: jokes ──
+  {
+    type:"joke",
+    title:"today's vibe",
+    content:"I love doing nothing.\n\nIt's just that I never seem to finish it."
+  },
+  {
+    type:"joke",
+    title:"real talk",
+    content:"I went to get water and came back with snacks.\n\nHydration is a journey."
+  },
+  {
+    type:"joke",
+    title:"today's plan",
+    content:"I made a plan for today…\n\nthen I decided to respect my peace instead."
+  },
+  // ── rest of the content ──
+  {"type":"decision","title":"What Should You Eat?","content":"Pick a number between 1 and 5","options":{"1":"Masala dosa","2":"Paneer butter masala","3":"Maggi (yes, again)","4":"Order biryani","5":"Skip and eat snacks all day 😈"}},
+  {"type":"challenge","title":"Mini Challenge","content":"Do 10 pushups right now. If you skip, you owe yourself a coffee."},
+  {"type":"weird_fact","title":"Weird Fact","content":"Octopuses have three hearts and blue blood."},
+  {"type":"thought","title":"Random Thought","content":"If time travel gets invented, we'll never know if it already happened."},
+  {"type":"interactive","title":"Your Luck Today","content":"Pick a number from 1–3","options":{"1":"Good news coming 🎉","2":"Neutral day 😐","3":"Plot twist incoming 😏"}},
+  {"type":"tiny_story","title":"2-Line Story","content":"He checked his phone at 3:00 AM.\nNo new messages — except one from his own number."},
+  {"type":"life_tip","title":"Life Tip","content":"If something takes less than 2 minutes, do it immediately."},
+  {"type":"fun_task","title":"Do Something Random","content":"Text a friend you haven't spoken to in 6 months. No context."},
+  {"type":"absurd","title":"Important Decision","content":"If you see a crow today, it's a sign to start something new. If not, still start."},
+  {"type":"question","title":"Think About This","content":"What would you do if you had zero fear for 24 hours?"},
+  {"type":"game","title":"Quick Game","content":"Pick a letter A–Z","action":"Name 5 things starting with that letter in 10 seconds. Go."},
+  {"type":"motivation","title":"Tiny Motivation","content":"You don't need to be consistent forever.\n\nJust be consistent today."},
+  {"type":"randomizer","title":"Fate Decides","content":"Flip a coin","options":{"heads":"Work on something important","tails":"Relax guilt-free"}},
+  {"type":"meta","title":"Glitch in the System","content":"You weren't supposed to see this message…\n\nBut since you did, take a break."},
+  {"type":"weird_decision","title":"Lunch Oracle","content":"Last digit of your phone number decides:","options":{"0":"Eat something healthy (yes, actually)","1":"Biryani. No debate.","2":"Street food mission","3":"Order something overpriced","4":"Leftovers champion","5":"Maggi again (no shame)","6":"Skip meal, regret later","7":"Try something you've never eaten","8":"Just chai + snacks","9":"Ask someone else and blame them"}},
+  {"type":"glitch","title":"System Message","content":"You have been selected for something important.\n\nDetails unclear."},
+  {"type":"challenge","title":"Micro Dare","content":"Open your gallery and delete 5 useless screenshots. Be honest."},
+  {"type":"absurd","title":"Reality Check","content":"If today feels weird, it's because you're in the side quest, not the main story."},
+  {"type":"interactive","title":"Pick a Color","content":"Red, Blue, Green, Yellow?","options":{"Red":"Take a bold decision today","Blue":"Stay calm, avoid drama","Green":"Money-related thought incoming","Yellow":"Unexpected conversation today"}},
+  {"type":"tiny_story","title":"2-Line Horror","content":"She waved at me from across the street.\n\nI live alone."},
+  {"type":"question","title":"Pause & Think","content":"Are you doing what you want, or just what's easy?"},
+  {"type":"game","title":"Brain Lag Test","content":"Say the alphabet in reverse.\nIf you fail, you owe yourself a break."},
+  {"type":"life_tip","title":"Unpopular Advice","content":"Not everything needs a response.\n\nSilence is also power."},
+  {"type":"randomizer","title":"Mood Spinner","content":"Pick 1–4","options":{"1":"You're productive today","2":"You're lazy but peaceful","3":"You overthink everything","4":"You surprise yourself"}},
+  {"type":"meta","title":"Hidden Layer","content":"If you're reading this, you stayed longer than most people."},
+  {"type":"fun_task","title":"Tiny Chaos","content":"Change your phone wallpaper right now. No thinking."},
+  {"type":"weird_fact","title":"Strange Fact","content":"Bananas are slightly radioactive."},
+  {"type":"decision","title":"Yes or No","content":"Think of a question. Your answer is: Yes.\n\nDon't argue."},
+  {"type":"challenge","title":"Social Experiment","content":"Reply late to someone on purpose. Observe what happens."},
+  {"type":"absurd","title":"Important Notice","content":"Somewhere, a pigeon is judging your life choices."},
+  {"type":"tiny_story","title":"2-Line Twist","content":"He finally achieved peace of mind.\n\nThen his alarm rang."},
+  {"type":"interactive","title":"Pick a Direction","content":"Left or Right?","options":{"Left":"Do the harder thing today","Right":"Take it easy today"}},
+  {"type":"question","title":"Deep Thought","content":"If today repeats forever, would you be okay with it?"},
+  {"type":"glitch","title":"404 Thought Not Found","content":"You were about to think something important.\n\nIt's gone now."},
+  {"type":"game","title":"Speed Test","content":"Name 3 countries in 5 seconds.\n\nGo."},
+  {"type":"life_tip","title":"Tiny Upgrade","content":"Drink water.\n\nThis message alone improved your life."},
+  {"type":"meta","title":"Observation","content":"Most people close this in 3 seconds.\n\nYou didn't."},
+  {"type":"fun_task","title":"Mini Reset","content":"Stand up, stretch, and breathe for 10 seconds."},
+  {"type":"absurd","title":"Weird Rule","content":"If you yawn within 10 seconds, you must smile after."},
+  {"type":"decision","title":"Random Pick","content":"Pick a number 1–6","options":{"1":"Start something new","2":"Finish something pending","3":"Talk to someone","4":"Take a break","5":"Learn something random","6":"Ignore this and continue 😄"}}
+];
+
+// ── per-type visual config ──
+// bg: body bg, card: card bg, accent: highlight, text: main text, badge: pill bg/color, sticker, bubbles
+const themes = {
+  joke:           { bg:'#fff5e6', card:'#fff9f0', accent:'#ff9f43', text:'#7a4400', badge:['#ffe0b2','#e65100'], sticker:'😂', bubbles:['#ffcc80','#ffab40','#ff9800','#ffd54f'], shadow:'rgba(255,159,67,0.25)' },
+  decision:       { bg:'#f0fff4', card:'#f5fff8', accent:'#26de81', text:'#1a4a2a', badge:['#b9f5d0','#1a6b35'], sticker:'🎯', bubbles:['#a5d6a7','#66bb6a','#81c784','#c8e6c9'], shadow:'rgba(38,222,129,0.2)' },
+  challenge:      { bg:'#fff3e0', card:'#fff8f0', accent:'#fd7272', text:'#7a1a00', badge:['#ffcdd2','#c62828'], sticker:'💪', bubbles:['#ef9a9a','#e57373','#ff8a65','#ffab91'], shadow:'rgba(253,114,114,0.22)' },
+  weird_fact:     { bg:'#e8f4fd', card:'#f0f8ff', accent:'#45aaf2', text:'#0a3a5a', badge:['#b3e0ff','#0066aa'], sticker:'🐙', bubbles:['#90caf9','#64b5f6','#42a5f5','#bbdefb'], shadow:'rgba(69,170,242,0.2)' },
+  thought:        { bg:'#f3f0ff', card:'#f8f5ff', accent:'#a55eea', text:'#3a006a', badge:['#e1d5f5','#6a00aa'], sticker:'🌀', bubbles:['#ce93d8','#ba68c8','#ab47bc','#e1bee7'], shadow:'rgba(165,94,234,0.2)' },
+  interactive:    { bg:'#fff0f8', card:'#fff5fb', accent:'#ff6eb4', text:'#7a0040', badge:['#ffc0e0','#cc0066'], sticker:'✨', bubbles:['#f48fb1','#f06292','#ec407a','#fce4ec'], shadow:'rgba(255,110,180,0.22)' },
+  tiny_story:     { bg:'#f8f0ff', card:'#fcf5ff', accent:'#8854d0', text:'#3a0060', badge:['#d8b4fe','#6d28d9'], sticker:'🌙', bubbles:['#b39ddb','#9575cd','#7e57c2','#ede7f6'], shadow:'rgba(136,84,208,0.2)' },
+  life_tip:       { bg:'#e8fffe', card:'#f0ffff', accent:'#2bcbba', text:'#004a44', badge:['#a0f0eb','#007a70'], sticker:'💡', bubbles:['#80cbc4','#4db6ac','#26a69a','#b2dfdb'], shadow:'rgba(43,203,186,0.2)' },
+  fun_task:       { bg:'#fffde7', card:'#ffffe8', accent:'#ffd32a', text:'#5a4000', badge:['#fff9c4','#f57f17'], sticker:'🎲', bubbles:['#fff176','#ffee58','#ffeb3b','#fff9c4'], shadow:'rgba(255,211,42,0.22)' },
+  absurd:         { bg:'#fdf0ff', card:'#fff5ff', accent:'#cd84f1', text:'#500060', badge:['#ead0ff','#7b00aa'], sticker:'🐦', bubbles:['#e040fb','#ce93d8','#ba68c8','#f3e5f5'], shadow:'rgba(205,132,241,0.22)' },
+  question:       { bg:'#e8f3ff', card:'#f0f7ff', accent:'#4a90d9', text:'#0a2a5a', badge:['#bbdefb','#1565c0'], sticker:'🔭', bubbles:['#90caf9','#64b5f6','#42a5f5','#1e88e5'], shadow:'rgba(74,144,217,0.2)' },
+  game:           { bg:'#f0fff0', card:'#f5fff5', accent:'#20bf6b', text:'#0a4a1a', badge:['#a5d6a7','#1b5e20'], sticker:'🎮', bubbles:['#69f0ae','#00e676','#66bb6a','#c8e6c9'], shadow:'rgba(32,191,107,0.2)' },
+  motivation:     { bg:'#fff0f5', card:'#fff5f8', accent:'#ff4757', text:'#7a0020', badge:['#ffd0da','#b71c1c'], sticker:'🔥', bubbles:['#ef9a9a','#e57373','#f44336','#ffcdd2'], shadow:'rgba(255,71,87,0.22)' },
+  randomizer:     { bg:'#fffff0', card:'#fffff5', accent:'#eccc68', text:'#5a4800', badge:['#fff9c4','#e65100'], sticker:'🎰', bubbles:['#fff176','#ffee58','#fdd835','#f9a825'], shadow:'rgba(236,204,104,0.22)' },
+  meta:           { bg:'#f5f5f5', card:'#f9f9f9', accent:'#778ca3', text:'#2a3040', badge:['#cfd8dc','#37474f'], sticker:'👁', bubbles:['#b0bec5','#90a4ae','#78909c','#eceff1'], shadow:'rgba(119,140,163,0.18)' },
+  glitch:         { bg:'#fff0f0', card:'#fff5f5', accent:'#ff3838', text:'#7a0000', badge:['#ffcdd2','#b71c1c'], sticker:'⚡', bubbles:['#ef9a9a','#e53935','#ff1744','#ffcdd2'], shadow:'rgba(255,56,56,0.22)' },
+  weird_decision: { bg:'#f8f0ff', card:'#faf5ff', accent:'#b44bea', text:'#3d0070', badge:['#e8d0ff','#6a00bb'], sticker:'🔮', bubbles:['#ce93d8','#ab47bc','#8e24aa','#f3e5f5'], shadow:'rgba(180,75,234,0.22)' },
+};
+
+const typeLabels = {
+  joke:'joke of the day 😂', decision:'make a choice 🎯', challenge:'dare you 💪',
+  weird_fact:'did you know 🤯', thought:'random thought 🌀', interactive:'your turn ✨',
+  tiny_story:'story time 📖', life_tip:'pro tip 💡', fun_task:'do it 🎲',
+  absurd:'absolutely true 🐦', question:'think harder 🔭', game:'let\'s play 🎮',
+  motivation:'you got this 🔥', randomizer:'fate speaks 🎰', meta:'wait what 👁',
+  glitch:'error 404 ⚡', weird_decision:'the oracle 🔮'
+};
+
+function getDayIndex() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / 86400000) % days.length;
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+}
+
+function makeBubbles(colors, bgWrap) {
+  bgWrap.innerHTML = '';
+  const N = 14;
+  for (let i = 0; i < N; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 40 + Math.random() * 100;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const left = Math.random() * 100;
+    const dur = 8 + Math.random() * 14;
+    const delay = -Math.random() * dur;
+    b.style.cssText = `width:${size}px;height:${size}px;left:${left}%;bottom:-${size}px;background:${color};animation-duration:${dur}s;animation-delay:${delay}s;`;
+    bgWrap.appendChild(b);
+  }
+}
+
+function renderCard(entry, index) {
+  const t = themes[entry.type] || themes.meta;
+  const label = typeLabels[entry.type] || entry.type;
+
+  // body + bg
+  document.body.style.background = t.bg;
+  makeBubbles(t.bubbles, document.getElementById('bg-wrap'));
+  document.getElementById('bg-wrap').style.background = t.bg;
+
+  // logo colour
+  document.getElementById('logo').style.color = t.accent;
+
+  // date
+  document.getElementById('date-line').textContent = formatDate(new Date());
+  document.getElementById('date-line').style.color = t.text;
+
+  // card
+  const card = document.getElementById('main-card');
+  card.style.background = t.card;
+  card.style.boxShadow = `0 20px 60px ${t.shadow}, 0 4px 20px ${t.shadow}`;
+
+  // sticker
+  document.getElementById('card-sticker').textContent = t.sticker;
+
+  // badge
+  const badge = document.getElementById('type-badge');
+  badge.textContent = label;
+  badge.style.background = t.badge[0];
+  badge.style.color = t.badge[1];
+
+  // title + content
+  const titleEl = document.getElementById('card-title');
+  titleEl.textContent = entry.title;
+  titleEl.style.color = t.text;
+
+  const contentEl = document.getElementById('card-content');
+  // for jokes, split setup and punchline
+  if (entry.type === 'joke' && entry.content.includes('\n\n')) {
+    const [setup, punch] = entry.content.split('\n\n');
+    contentEl.innerHTML = `<span style="color:${t.text};opacity:0.7">${setup}</span>\n\n<span class="punchline" style="color:${t.accent}">${punch}</span>`;
+  } else {
+    contentEl.textContent = entry.content;
+    contentEl.style.color = t.text;
+    contentEl.style.opacity = '0.75';
+  }
+
+  // options
+  const optContainer = document.getElementById('options-container');
+  optContainer.innerHTML = '';
+  if (entry.options) {
+    const div = document.createElement('div');
+    div.className = 'options';
+    Object.entries(entry.options).forEach(([k, v]) => {
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.style.background = t.badge[0] + '88';
+      row.innerHTML = `<span class="option-key" style="color:${t.accent}">${k}</span><span class="option-val" style="color:${t.text}">${v}</span>`;
+      div.appendChild(row);
+    });
+    optContainer.appendChild(div);
+  }
+
+  // action hint
+  const actContainer = document.getElementById('action-container');
+  actContainer.innerHTML = entry.action
+    ? `<div class="action-hint" style="background:${t.badge[0]}88;color:${t.text}">→ ${entry.action}</div>` : '';
+
+  // day chip
+  const chip = document.getElementById('day-chip');
+  chip.textContent = `day ${(index % days.length) + 1} of ${days.length}`;
+  chip.style.background = t.badge[0];
+  chip.style.color = t.badge[1];
+
+  // notify btn
+  const btn = document.getElementById('notify-btn');
+  btn.style.background = t.accent;
+  btn.style.color = '#fff';
+
+  // progress
+  const pct = ((index + 1) / days.length * 100).toFixed(1);
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = pct + '%';
+  fill.style.background = t.accent;
+
+  // toast colour
+  document.getElementById('toast').style.background = t.accent;
+  document.getElementById('toast').style.color = '#fff';
+
+  // glitch title anim
+  titleEl.style.animation = entry.type === 'glitch' ? 'glitchShake 2.5s infinite' : 'none';
+}
+
+// ── toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── notifications ──
+let notifEnabled = localStorage.getItem('notif_enabled') === 'true';
+
+function updateNotifyBtn() {
+  const btn = document.getElementById('notify-btn');
+  if (notifEnabled) {
+    btn.textContent = '🔔 on!';
+    btn.style.opacity = '0.75';
+  } else {
+    btn.textContent = '🔔 remind me';
+    btn.style.opacity = '1';
+  }
+}
+
+async function toggleNotifications() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    showToast('not supported here 😬'); return;
+  }
+  if (notifEnabled) {
+    notifEnabled = false;
+    localStorage.setItem('notif_enabled','false');
+    updateNotifyBtn();
+    showToast('notifications off 🔕'); return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { showToast('denied 😔'); return; }
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+    notifEnabled = true;
+    localStorage.setItem('notif_enabled','true');
+    updateNotifyBtn();
+    showToast('8:30am everyday 🔔✨');
+    reg.active && reg.active.postMessage({ type:'SCHEDULE' });
+  } catch(e) { showToast('something went wrong 😬'); }
+}
+
+// ── init ──
+const idx = getDayIndex();
+renderCard(days[idx], idx);
+updateNotifyBtn();
+</script>
+</body>
+</html>
