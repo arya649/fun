@@ -745,15 +745,30 @@ function updateNotifyBtn(opted = false) {
 }
   
 async function toggleNotifications() {
-  // desktop or already installed PWA → use OneSignal directly
-  if (!isMobile || isStandalone) {
-    await doOneSignal();
-    return;
+  try {
+    const OS = window.OneSignal;
+    if (!OS) { showToast('loading… try again 😬'); return; }
+    
+    // FIX: Removed 'await' because optedIn is a synchronous boolean.
+    // This keeps the user-gesture context intact for mobile browsers!
+    const isSubscribed = OS.User.PushSubscription.optedIn; 
+    
+    if (isSubscribed) {
+      await OS.User.PushSubscription.optOut();
+      localStorage.setItem('os_subscribed','false');
+      updateNotifyBtn();
+      showToast('notifications off 🔕');
+    } else {
+      await OS.Notifications.requestPermission();
+      localStorage.setItem('os_subscribed','true');
+      updateNotifyBtn();
+      showToast('8:30am everyday 🔔✨');
+    }
+  } catch(e) {
+    showToast('something went wrong 😬');
   }
-  // mobile not installed → show install sheet
-  openSheet();
 }
-
+  
 async function doOneSignal() {
   const btn = document.getElementById('notify-btn');
   btn.textContent = '...';
