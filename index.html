@@ -480,7 +480,7 @@ body {
     <div id="action-container"></div>
     <div class="card-footer">
       <div class="day-chip" id="day-chip"></div>
-      <button class="notify-btn" id="notify-btn" onclick="toggleNotifications()">🔔 remind me</button>
+      <button class="notify-btn" id="notify-btn" onclick="toggleNotifications()">📲 get notified</button>
     </div>
   </div>
 
@@ -701,9 +701,12 @@ function renderCard(entry, index) {
   document.getElementById('toast').style.color = '#fff';
   window.currentTheme = t;
 
+  const opted = localStorage.getItem('os_subscribed') === 'true';
+  updateNotifyBtn(opted);
+
   // glitch title anim
   titleEl.style.animation = entry.type === 'glitch' ? 'glitchShake 2.5s infinite' : 'none';
-}
+  }
 
 // ── toast ──
 function showToast(msg) {
@@ -725,9 +728,10 @@ window.addEventListener('beforeinstallprompt', e => {
   deferredPrompt = e;
 });
 
-function updateNotifyBtn(opted) {
+function updateNotifyBtn(opted = false) {
   const btn = document.getElementById('notify-btn');
   if (!btn) return;
+
   if (isStandalone) {
     btn.textContent = opted ? '🔔 on!' : '🔔 remind me';
     btn.style.opacity = opted ? '0.75' : '1';
@@ -739,7 +743,7 @@ function updateNotifyBtn(opted) {
     btn.style.opacity = opted ? '0.75' : '1';
   }
 }
-
+  
 async function toggleNotifications() {
   // desktop or already installed PWA → use OneSignal directly
   if (!isMobile || isStandalone) {
@@ -866,7 +870,8 @@ async function doInstall() {
 // ── init ──
 const idx = getDayIndex();
 renderCard(days[idx], idx);
-updateNotifyBtn();
+const opted = localStorage.getItem('os_subscribed') === 'true';
+updateNotifyBtn(opted);
 </script>
 
 <div class="overlay" id="overlay" onclick="closeSheet()"></div>
