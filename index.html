@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="daily.wtf">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon.png">
 <title>daily.wtf</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,800;1,400;1,700&display=swap" rel="stylesheet">
@@ -352,6 +357,99 @@ body {
   .card-sticker { font-size: 100px; }
   .logo { font-size: 30px; }
 }
+
+/* ── install bottom sheet ── */
+.install-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  padding: 0 16px 32px;
+  transform: translateY(110%);
+  transition: transform 0.4s cubic-bezier(.34,1.26,.64,1);
+}
+.install-sheet.show { transform: translateY(0); }
+
+.install-card {
+  border-radius: 24px;
+  padding: 24px 22px 20px;
+  box-shadow: 0 -4px 40px rgba(0,0,0,0.12), 0 8px 40px rgba(0,0,0,0.15);
+  position: relative;
+}
+
+.install-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none; border: none;
+  font-size: 20px; cursor: pointer;
+  opacity: 0.4; padding: 4px 8px;
+}
+
+.install-title {
+  font-family: "Fredoka", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.install-sub {
+  font-size: 13px;
+  opacity: 0.6;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.install-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Fredoka", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.install-btn-main {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  border: none;
+  font-family: "Fredoka", sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+  letter-spacing: 0.02em;
+}
+.install-btn-main:hover { opacity: 0.9; }
+.install-btn-main:active { transform: scale(0.97); }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+
 </style>
 </head>
 <body>
@@ -601,6 +699,7 @@ function renderCard(entry, index) {
   // toast colour
   document.getElementById('toast').style.background = t.accent;
   document.getElementById('toast').style.color = '#fff';
+  window.currentTheme = t;
 
   // glitch title anim
   titleEl.style.animation = entry.type === 'glitch' ? 'glitchShake 2.5s infinite' : 'none';
@@ -614,32 +713,57 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── notifications via OneSignal ──
+// ── install / notify logic ──
+let deferredPrompt = null;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid = /android/i.test(navigator.userAgent);
+const isMobile = isIOS || isAndroid;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
 function updateNotifyBtn(opted) {
   const btn = document.getElementById('notify-btn');
   if (!btn) return;
-  btn.textContent = opted ? '🔔 on!' : '🔔 remind me';
-  btn.style.opacity = opted ? '0.75' : '1';
+  if (isStandalone) {
+    btn.textContent = opted ? '🔔 on!' : '🔔 remind me';
+    btn.style.opacity = opted ? '0.75' : '1';
+  } else if (isMobile) {
+    btn.textContent = '📲 get notified';
+    btn.style.opacity = '1';
+  } else {
+    btn.textContent = opted ? '🔔 on!' : '🔔 remind me';
+    btn.style.opacity = opted ? '0.75' : '1';
+  }
 }
 
 async function toggleNotifications() {
+  // desktop or already installed PWA → use OneSignal directly
+  if (!isMobile || isStandalone) {
+    await doOneSignal();
+    return;
+  }
+  // mobile not installed → show install sheet
+  openSheet();
+}
+
+async function doOneSignal() {
   const btn = document.getElementById('notify-btn');
   btn.textContent = '...';
   btn.style.opacity = '0.5';
-
-  // wait up to 4s for SDK to be ready
   let waited = 0;
   while (!window._osReady && waited < 4000) {
     await new Promise(r => setTimeout(r, 200));
     waited += 200;
   }
-
   if (!window._osReady || !window._OS) {
     showToast('still loading, try again 😬');
     updateNotifyBtn(localStorage.getItem('os_subscribed') === 'true');
     return;
   }
-
   try {
     const OS = window._OS;
     const isSubscribed = await OS.User.PushSubscription.optedIn;
@@ -665,10 +789,95 @@ async function toggleNotifications() {
   }
 }
 
+function openSheet() {
+  const sheet = document.getElementById('install-sheet');
+  const card = document.getElementById('install-card');
+  const overlay = document.getElementById('overlay');
+  const steps = document.getElementById('sheet-steps');
+  const btn = document.getElementById('install-btn-main');
+
+  // style card using current theme colours
+  const t = currentTheme;
+  card.style.background = t.card;
+  document.getElementById('install-title').style.color = t.text;
+  document.getElementById('sheet-sub').style.color = t.text;
+  btn.style.background = t.accent;
+  btn.style.color = '#fff';
+
+  if (isAndroid && deferredPrompt) {
+    // Android with native prompt available
+    document.getElementById('sheet-title').textContent = 'get daily reminders 🔔';
+    document.getElementById('sheet-sub').textContent = 'one tap and you're in ✨';
+    steps.innerHTML = '';
+    btn.textContent = 'add to home screen ✨';
+  } else if (isIOS) {
+    document.getElementById('sheet-title').textContent = 'add to home screen 📲';
+    document.getElementById('sheet-sub').textContent = 'to get daily notifications at 8:30am';
+    steps.innerHTML = [
+      ['1', '📤', 'tap the share button at the bottom'],
+      ['2', '➕', 'tap "Add to Home Screen"'],
+      ['3', '🔔', 'open the app and tap remind me'],
+    ].map(([n, icon, text]) =>
+      `<div class="install-step">
+        <div class="step-num" style="background:${t.badge[0]};color:${t.badge[1]}">${n}</div>
+        <span style="color:${t.text}">${icon} ${text}</span>
+      </div>`
+    ).join('');
+    btn.textContent = 'got it 👍';
+  } else {
+    // Android without prompt (already dismissed once)
+    document.getElementById('sheet-title').textContent = 'add to home screen 📲';
+    document.getElementById('sheet-sub').textContent = 'to get daily notifications at 8:30am';
+    steps.innerHTML = [
+      ['1', '⋮', 'tap the three-dot menu in Chrome'],
+      ['2', '➕', 'tap "Add to Home Screen"'],
+      ['3', '🔔', 'open the app and tap remind me'],
+    ].map(([n, icon, text]) =>
+      `<div class="install-step">
+        <div class="step-num" style="background:${t.badge[0]};color:${t.badge[1]}">${n}</div>
+        <span style="color:${t.text}">${icon} ${text}</span>
+      </div>`
+    ).join('');
+    btn.textContent = 'got it 👍';
+  }
+
+  overlay.classList.add('show');
+  sheet.classList.add('show');
+}
+
+function closeSheet() {
+  document.getElementById('install-sheet').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+async function doInstall() {
+  if (isAndroid && deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    closeSheet();
+    if (outcome === 'accepted') showToast('added! open app for notifications 🔔');
+  } else {
+    closeSheet();
+  }
+}
+
 // ── init ──
 const idx = getDayIndex();
 renderCard(days[idx], idx);
 updateNotifyBtn();
 </script>
+
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+<div class="install-sheet" id="install-sheet">
+  <div class="install-card" id="install-card">
+    <button class="install-close" onclick="closeSheet()">✕</button>
+    <div class="install-title" id="sheet-title">get daily reminders 🔔</div>
+    <div class="install-sub" id="sheet-sub">add to home screen to enable notifications</div>
+    <div class="install-steps" id="sheet-steps"></div>
+    <button class="install-btn-main" id="install-btn-main" onclick="doInstall()">add to home screen ✨</button>
+  </div>
+</div>
+
 </body>
 </html>
