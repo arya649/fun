@@ -754,14 +754,10 @@ async function doOneSignal() {
   const btn = document.getElementById('notify-btn');
   btn.textContent = '...';
   btn.style.opacity = '0.5';
-  let waited = 0;
-  while (!window._osReady && waited < 4000) {
-    await new Promise(r => setTimeout(r, 200));
-    waited += 200;
-  }
-  if (!window._osReady || !window._OS) {
-    showToast('still loading, try again 😬');
-    updateNotifyBtn(localStorage.getItem('os_subscribed') === 'true');
+
+  if (!window._osReady) {
+    showToast('make sure you are on your real domain 😬');
+    updateNotifyBtn(false);
     return;
   }
   try {
@@ -796,6 +792,11 @@ function openSheet() {
   const steps = document.getElementById('sheet-steps');
   const btn = document.getElementById('install-btn-main');
 
+  if (!sheet || !card || !overlay || !steps || !btn) {
+    console.warn('install sheet elements missing');
+    return;
+  }
+
   // style card using current theme colours
   const t = window.currentTheme || themes.joke;
   card.style.background = t.card;
@@ -807,7 +808,7 @@ function openSheet() {
   if (isAndroid && deferredPrompt) {
     // Android with native prompt available
     document.getElementById('sheet-title').textContent = 'get daily reminders 🔔';
-    document.getElementById('sheet-sub').textContent = 'one tap and you are in ✨';
+    document.getElementById("sheet-sub").textContent = "one tap and you are in ✨";
     steps.innerHTML = '';
     btn.textContent = 'add to home screen ✨';
   } else if (isIOS) {
