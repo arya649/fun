@@ -797,7 +797,7 @@ function openSheet() {
   const btn = document.getElementById('install-btn-main');
 
   // style card using current theme colours
-  const t = currentTheme;
+  const t = window.currentTheme || themes.joke;
   card.style.background = t.card;
   document.getElementById('install-title').style.color = t.text;
   document.getElementById('sheet-sub').style.color = t.text;
