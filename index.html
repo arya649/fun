@@ -9,12 +9,24 @@
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window._osReady = false;
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "e738de5d-8c2c-436e-b8a6-a4a19a4d7108",
       notifyButton: { enable: false },
       allowLocalhostAsSecureOrigin: true,
     });
+    window._osReady = true;
+    window._OS = OneSignal;
+    try {
+      const opted = await OneSignal.User.PushSubscription.optedIn;
+      const btn = document.getElementById("notify-btn");
+      if (btn) {
+        btn.textContent = opted ? "🔔 on!" : "🔔 remind me";
+        btn.style.opacity = opted ? "0.75" : "1";
+        localStorage.setItem("os_subscribed", opted ? "true" : "false");
+      }
+    } catch(e) {}
   });
 </script>
 <style>
@@ -603,31 +615,53 @@ function showToast(msg) {
 }
 
 // ── notifications via OneSignal ──
-function updateNotifyBtn() {
+function updateNotifyBtn(opted) {
   const btn = document.getElementById('notify-btn');
-  const on = localStorage.getItem('os_subscribed') === 'true';
-  btn.textContent = on ? '🔔 on!' : '🔔 remind me';
-  btn.style.opacity = on ? '0.75' : '1';
+  if (!btn) return;
+  btn.textContent = opted ? '🔔 on!' : '🔔 remind me';
+  btn.style.opacity = opted ? '0.75' : '1';
 }
 
 async function toggleNotifications() {
+  const btn = document.getElementById('notify-btn');
+  btn.textContent = '...';
+  btn.style.opacity = '0.5';
+
+  // wait up to 4s for SDK to be ready
+  let waited = 0;
+  while (!window._osReady && waited < 4000) {
+    await new Promise(r => setTimeout(r, 200));
+    waited += 200;
+  }
+
+  if (!window._osReady || !window._OS) {
+    showToast('still loading, try again 😬');
+    updateNotifyBtn(localStorage.getItem('os_subscribed') === 'true');
+    return;
+  }
+
   try {
-    const OS = window.OneSignal;
-    if (!OS) { showToast('loading… try again 😬'); return; }
+    const OS = window._OS;
     const isSubscribed = await OS.User.PushSubscription.optedIn;
     if (isSubscribed) {
       await OS.User.PushSubscription.optOut();
-      localStorage.setItem('os_subscribed','false');
-      updateNotifyBtn();
+      localStorage.setItem('os_subscribed', 'false');
+      updateNotifyBtn(false);
       showToast('notifications off 🔕');
     } else {
-      await OS.Notifications.requestPermission();
-      localStorage.setItem('os_subscribed','true');
-      updateNotifyBtn();
-      showToast('8:30am everyday 🔔✨');
+      const granted = await OS.Notifications.requestPermission();
+      if (granted) {
+        localStorage.setItem('os_subscribed', 'true');
+        updateNotifyBtn(true);
+        showToast('8:30am everyday 🔔✨');
+      } else {
+        updateNotifyBtn(false);
+        showToast('permission denied 😔');
+      }
     }
   } catch(e) {
     showToast('something went wrong 😬');
+    updateNotifyBtn(localStorage.getItem('os_subscribed') === 'true');
   }
 }
 
